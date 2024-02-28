@@ -9,3 +9,8 @@
 9. Launch
 
 For Epic Games the relevant folder should be `C:\Epic Games\games\rocketleague\TAGame\CookedPCConsole`. Instead of step 2, you can use the `LethNeonHeightsRings.udk` file in this repo.
+
+# Collecting a Reference Trajectory
+1. Add a Human alongside OCRLBot in the match on opposite teams when setting up the RLBot GUI.
+2. Modify the OCRLBot code to log the foes' state at every timestep.
+3. Unsure how to log the foes' control inputs.
