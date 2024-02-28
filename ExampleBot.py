@@ -12,9 +12,9 @@ logging.basicConfig(filename=log_file_path, level=logging.DEBUG)
 #This file is for strategy
 
 class ExampleBot(GoslingAgent):
-    def run(agent):
+    def run(agent, packet):
         # logging.debug(f"Car Location: {agent.me.location}")
-        logging.debug(f"Enemy Pose: {agent.foes[0].location}; {agent.foes[0].orientation}; "
+        logging.debug(f"Enemy Pose: {agent.foes[0].location}; {packet.game_cars[agent.foes[0].index].physics.rotation}; "
                       f"{agent.foes[0].velocity}; {agent.foes[0].angular_velocity}")
 
         # comment out to stop the bot from driving off and triggering a respawn

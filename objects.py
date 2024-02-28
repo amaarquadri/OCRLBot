@@ -100,7 +100,7 @@ class GoslingAgent(BaseAgent):
 
         self.renderer.begin_rendering()
         # Run our strategy code
-        self.run()
+        self.run(packet)
         # run the routine on the end of the stack
         if len(self.stack) > 0:
             self.stack[-1].run(self)
@@ -108,7 +108,7 @@ class GoslingAgent(BaseAgent):
         # send our updated controller back to rlbot
         return self.controller
 
-    def run(self):
+    def run(self, packet):
         # override this with your strategy code
         pass
 
