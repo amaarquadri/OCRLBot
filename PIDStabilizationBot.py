@@ -53,6 +53,11 @@ class PIDStabilizationBot(BaseAgent):
         logger.addHandler(file_handler)
         return logger
 
+    @staticmethod
+    def repr_controls(controls: SimpleControllerState) -> str:
+        return f"SimpleControllerState(throttle={controls.throttle}, jump={controls.jump}, boost={controls.boost}, " \
+               f"pitch={controls.pitch}, yaw={controls.yaw}, roll={controls.roll})"
+
     def has_started(self, packet: GameTickPacket) -> bool:
         if not packet.game_info.is_round_active:
             return False
@@ -131,7 +136,8 @@ class PIDStabilizationBot(BaseAgent):
             controls.jump = True
             controls.boost = True
             controls.pitch = 1.0  # Point the car upwards
-            self.logger.info(f"Startup Frame {frame_number}: State={repr(state)}, Controls={repr(controls)}")
+            self.logger.info(f"Startup Frame {frame_number}: State={repr(state)}, "
+                             f"Controls={PIDStabilizationBot.repr_controls(controls)}")
             return controls
 
         # Set the setpoint
@@ -143,5 +149,6 @@ class PIDStabilizationBot(BaseAgent):
         controls.roll, controls.pitch, controls.yaw = torques
         controls.boost = PIDStabilizationBot.should_boost(state, setpoint)
 
-        self.logger.info(f"Frame {frame_number}: State={repr(state)}, Controls={repr(controls)}")
+        self.logger.info(f"Frame {frame_number}: State={repr(state)}, "
+                         f"Controls={PIDStabilizationBot.repr_controls(controls)}")
         return controls
