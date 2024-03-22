@@ -82,7 +82,7 @@ class PIDStabilizationBot(BaseAgent):
         """
         # From Robot Mobility slides, but assuming m = 1
         position_error = state.position - setpoint.position
-        desired_acceleration = -self.kp_position * position_error - self.kd_position * state.velocity
+        desired_acceleration = -self.kp_position @ position_error - self.kd_position @ state.velocity
         desired_acceleration[2] = GRAVITY  # we control z via the energy of the system instead since our boost is binary
 
         z_d = desired_acceleration / np.linalg.norm(desired_acceleration)  # units of acceleration instead of force
@@ -101,7 +101,7 @@ class PIDStabilizationBot(BaseAgent):
         def S_inv(rotation_matrix: np.ndarray) -> np.ndarray:
             return np.array([rotation_matrix[2, 1], rotation_matrix[0, 2], rotation_matrix[1, 0]])
 
-        return -self.kp_orientation * S_inv(R_e - R_e.T) - self.kd_orientation * state.angular_velocity
+        return -self.kp_orientation @ S_inv(R_e - R_e.T) - self.kd_orientation @ state.angular_velocity
 
     @staticmethod
     def should_boost(state: State, setpoint: Setpoint) -> bool:
