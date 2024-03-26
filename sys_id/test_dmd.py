@@ -2,12 +2,14 @@
 # warnings.filterwarnings("ignore", category=DeprecationWarning)
 # warnings.filterwarnings("ignore", category=UserWarning)
 
+import os
+from functools import partial
+from typing import Dict, Tuple
+
 import gym
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.linalg import svd
-from typing import Tuple, Dict
-from functools import partial
 from tqdm import tqdm
 
 
@@ -82,15 +84,35 @@ def simulate_dynamics(dynamics, initial_state, actions):
     '''Simulates system dynamics using A and B matrices'''
     A = dynamics['A']
     B = dynamics['B']
-    states = [initial_state]
+    states = []
+
+    next_state = initial_state
 
     for action in actions:
-        next_state = np.dot(A, states[-1]) + np.dot(B, action)
+        next_state = np.dot(A, next_state) + np.dot(B, action)
         states.append(next_state)
 
     return np.array(states)
 
-def create_figures(pred, gt, save_path=None):
+def safe_plot_save(save_path, dpi=300):
+    if not os.path.exists(os.path.dirname(save_path)):
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    plt.savefig(save_path, dpi=300)
+
+def create_quantitative_figures(mse, save_path=None):
+    '''MSE over time averaged over several trajectories'''
+    n_subplots = mse.shape[-1]
+    fig, axs = plt.subplots(n_subplots, 1, figsize=(5 * n_subplots, 10))
+
+    for i in range(n_subplots):
+        axs[i].plot(mse[:, i])
+
+    if save_path is None:
+        plt.show()
+    else:
+        safe_plot_save(save_path)
+
+def create_qualitative_figures(pred, gt, save_path=None):
     n_subplots = pred.shape[-1]
     fig, axs = plt.subplots(n_subplots, 1, figsize=(5 * n_subplots, 10))
 
@@ -102,35 +124,82 @@ def create_figures(pred, gt, save_path=None):
     if save_path is None:
         plt.show()
     else:
-        plt.savefig(save_path, dpi=300)
+        safe_plot_save(save_path)
 
 
 if __name__ == '__main__':
 
-    env_name = 'Pendulum-v1' # 'CartPole-v1' / 'MountainCarContinuous-v0' / 'Pendulum-v1'
+    import argparse
 
-    env = gym.make(env_name)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--env_name', type=str, default='Pendulum-v1') # 'CartPole-v1' / 'MountainCarContinuous-v0' / 'Pendulum-v1'
+    parser.add_argument('--max_data_collect_steps', type=int, default=5000)
+    parser.add_argument('--n_qual_trajs', type=int, default=10)
+    parser.add_argument('--n_quant_trajs', type=int, default=500)
+    parser.add_argument('--n_quant_simulation_steps', type=int, default=100)
+    parser.add_argument('--save_dir', type=str, default='figures')
+
+    args = parser.parse_args()
+
+    env = gym.make(args.env_name)
 
     print(f'Observation Space: {env.observation_space}')
     print(f'Action Space: {env.action_space}')
 
     # Collect data from the environment
-    data = collect_data(env)
+    data = collect_data(env, max_steps=args.max_data_collect_steps)
 
-    print(f'Doing DMD on {data["states"].shape[0]} samples')
+    print(f'Running DMD on {data["states"].shape[0]} samples')
 
     # Perform Dynamic Mode Decomposition
     dynamics = perform_dmd(data)
 
-    print(f'Running qualitative evaluations')
     simulate = partial(simulate_dynamics, dynamics)
 
-    n_simulation_steps = 30
-    init_step = np.random.randint(0, data['states'].shape[0] - n_simulation_steps)
+    # Qualitative evaluation
+    for i in tqdm(range(args.n_qual_trajs), desc='Running qualitative evaluations'):
+        n_simulation_steps = np.random.randint(10, 100)
+        init_step = np.random.randint(0, data['states'].shape[0] - n_simulation_steps - 1)
 
-    initial_state = data['states'][init_step]
-    actions = data['actions'][init_step:init_step+n_simulation_steps]
-    simulated_states = simulate(initial_state, actions)
-    gt_states = data['states'][init_step+1:init_step+1+n_simulation_steps]
+        # Create data for simulation
+        initial_state = data['states'][init_step]
+        actions = data['actions'][init_step:init_step+n_simulation_steps]
+        gt_states = data['states'][init_step+1:init_step+1+n_simulation_steps]
+        simulated_states = simulate(initial_state, actions)
 
-    create_figures(simulated_states, gt_states)
+        save_path = f'{args.save_dir}/{args.env_name}/qual_{i}.png'
+        create_qualitative_figures(simulated_states, gt_states, save_path=save_path)
+
+    # Quantitative evaluations
+    gts = []
+    preds = []
+    n_simulation_steps = args.n_quant_simulation_steps
+
+    for i in tqdm(range(args.n_quant_trajs), desc='Running quantitative evaluations'):
+        init_step = np.random.randint(0, data['states'].shape[0] - n_simulation_steps - 1)
+
+        # Create data for simulation
+        initial_state = data['states'][init_step]
+        actions = data['actions'][init_step:init_step+n_simulation_steps]
+        gt_states = data['states'][init_step+1:init_step+1+n_simulation_steps]
+        simulated_states = simulate(initial_state, actions)
+
+        gts.append(gt_states)
+        preds.append(simulated_states)
+
+    gts = np.array(gts) # (n_quant_trajs, n_simulation_steps, ndim_s)
+    preds = np.array(preds) # (n_quant_trajs, n_simulation_steps, ndim_s)
+
+    assert gts.shape == preds.shape == (args.n_quant_trajs, n_simulation_steps, env.observation_space.shape[0])
+
+    # Normalize states
+    normalization_factor = (env.observation_space.high - env.observation_space.low)
+    gts /= normalization_factor.reshape(1, 1, -1)
+    preds /= normalization_factor.reshape(1, 1, -1)
+
+    # Take a mean over all the trajectories
+    mse = np.mean((gts - preds) ** 2, axis=0)
+    cum_mse = np.cumsum(mse, axis=0)
+
+    create_quantitative_figures(mse, save_path=f'{args.save_dir}/{args.env_name}/quant_mse.png')
+    create_quantitative_figures(cum_mse, save_path=f'{args.save_dir}/{args.env_name}/quant_cum_mse.png')
