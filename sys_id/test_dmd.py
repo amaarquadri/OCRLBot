@@ -127,12 +127,77 @@ def create_qualitative_figures(pred, gt, save_path=None):
         safe_plot_save(save_path)
 
 
+def generate_rollout(data, simulator, n_steps):
+    init_step = np.random.randint(0, data['states'].shape[0] - n_steps - 1)
+
+    # Create data for simulation
+    initial_state = data['states'][init_step]
+    actions = data['actions'][init_step:init_step+n_steps]
+    gt_states = data['states'][init_step+1:init_step+1+n_steps]
+    simulated_states = simulator(initial_state, actions)
+
+    rollout=dict(gt=gt_states,
+                 simulated=simulated_states,
+                 actions=actions,)
+
+    return rollout
+
+def run_qual_evals(n_trajs,
+                   data,
+                   simulator,
+                   save_dir,
+                   min_traj_len=10,
+                   max_traj_len=100):
+    # Qualitative evaluation
+    for i in tqdm(range(n_trajs), desc='Running qualitative evaluations'):
+        n_simulation_steps = np.random.randint(min_traj_len, max_traj_len)
+        rollout_data = generate_rollout(data, simulator, n_simulation_steps)
+        create_qualitative_figures(rollout_data['simulated'],
+                                   rollout_data['gt'],
+                                   save_path=f'{save_dir}/qual_{i}.png')
+
+def run_quant_evals(n_trajs,
+                    n_steps,
+                    data,
+                    simulator,
+                    env,
+                    save_dir,
+                    ):
+    # Quantitative evaluation
+        # Quantitative evaluations
+    gts = []
+    preds = []
+    n_simulation_steps = n_steps
+
+    for _ in tqdm(range(n_trajs), desc='Running quantitative evaluations'):
+        rollout_data = generate_rollout(data, simulator, n_simulation_steps)
+        gts.append(rollout_data['gt'])
+        preds.append(rollout_data['simulated'])
+
+    gts = np.array(gts) # (n_quant_trajs, n_simulation_steps, ndim_s)
+    preds = np.array(preds) # (n_quant_trajs, n_simulation_steps, ndim_s)
+
+    assert gts.shape == preds.shape == (n_trajs, n_simulation_steps, env.observation_space.shape[0])
+
+    # Normalize states
+    normalization_factor = (env.observation_space.high - env.observation_space.low)
+    gts /= normalization_factor.reshape(1, 1, -1)
+    preds /= normalization_factor.reshape(1, 1, -1)
+
+    # Take a mean over all the trajectories
+    mse = np.mean((gts - preds) ** 2, axis=0)
+    cum_mse = np.cumsum(mse, axis=0)
+
+    create_quantitative_figures(mse, save_path=f'{save_dir}/quant_mse.png')
+    create_quantitative_figures(cum_mse, save_path=f'{save_dir}/quant_cum_mse.png')
+
+
 if __name__ == '__main__':
 
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env_name', type=str, default='Pendulum-v1') # 'CartPole-v1' / 'MountainCarContinuous-v0' / 'Pendulum-v1'
+    parser.add_argument('--env', type=str, default='Pendulum-v1') # 'CartPole-v1' / 'MountainCarContinuous-v0' / 'Pendulum-v1'
     parser.add_argument('--max_data_collect_steps', type=int, default=5000)
     parser.add_argument('--n_qual_trajs', type=int, default=10)
     parser.add_argument('--n_quant_trajs', type=int, default=500)
@@ -141,7 +206,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    env = gym.make(args.env_name)
+    env = gym.make(args.env)
 
     print(f'Observation Space: {env.observation_space}')
     print(f'Action Space: {env.action_space}')
@@ -154,52 +219,16 @@ if __name__ == '__main__':
     # Perform Dynamic Mode Decomposition
     dynamics = perform_dmd(data)
 
-    simulate = partial(simulate_dynamics, dynamics)
+    simulator = partial(simulate_dynamics, dynamics)
 
-    # Qualitative evaluation
-    for i in tqdm(range(args.n_qual_trajs), desc='Running qualitative evaluations'):
-        n_simulation_steps = np.random.randint(10, 100)
-        init_step = np.random.randint(0, data['states'].shape[0] - n_simulation_steps - 1)
+    run_qual_evals(args.n_qual_trajs,
+                   data,
+                   simulator,
+                   save_dir=f'{args.save_dir}/{args.env}')
 
-        # Create data for simulation
-        initial_state = data['states'][init_step]
-        actions = data['actions'][init_step:init_step+n_simulation_steps]
-        gt_states = data['states'][init_step+1:init_step+1+n_simulation_steps]
-        simulated_states = simulate(initial_state, actions)
-
-        save_path = f'{args.save_dir}/{args.env_name}/qual_{i}.png'
-        create_qualitative_figures(simulated_states, gt_states, save_path=save_path)
-
-    # Quantitative evaluations
-    gts = []
-    preds = []
-    n_simulation_steps = args.n_quant_simulation_steps
-
-    for i in tqdm(range(args.n_quant_trajs), desc='Running quantitative evaluations'):
-        init_step = np.random.randint(0, data['states'].shape[0] - n_simulation_steps - 1)
-
-        # Create data for simulation
-        initial_state = data['states'][init_step]
-        actions = data['actions'][init_step:init_step+n_simulation_steps]
-        gt_states = data['states'][init_step+1:init_step+1+n_simulation_steps]
-        simulated_states = simulate(initial_state, actions)
-
-        gts.append(gt_states)
-        preds.append(simulated_states)
-
-    gts = np.array(gts) # (n_quant_trajs, n_simulation_steps, ndim_s)
-    preds = np.array(preds) # (n_quant_trajs, n_simulation_steps, ndim_s)
-
-    assert gts.shape == preds.shape == (args.n_quant_trajs, n_simulation_steps, env.observation_space.shape[0])
-
-    # Normalize states
-    normalization_factor = (env.observation_space.high - env.observation_space.low)
-    gts /= normalization_factor.reshape(1, 1, -1)
-    preds /= normalization_factor.reshape(1, 1, -1)
-
-    # Take a mean over all the trajectories
-    mse = np.mean((gts - preds) ** 2, axis=0)
-    cum_mse = np.cumsum(mse, axis=0)
-
-    create_quantitative_figures(mse, save_path=f'{args.save_dir}/{args.env_name}/quant_mse.png')
-    create_quantitative_figures(cum_mse, save_path=f'{args.save_dir}/{args.env_name}/quant_cum_mse.png')
+    run_quant_evals(args.n_quant_trajs,
+                    args.n_quant_simulation_steps,
+                    data,
+                    simulator,
+                    env,
+                    save_dir=f'{args.save_dir}/{args.env}')

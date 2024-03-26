@@ -2,6 +2,8 @@
 .idea/
 Experimental
 
+.DS_Store
+
 # Log dirs
 logs
 log
