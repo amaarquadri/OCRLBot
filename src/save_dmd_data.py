@@ -7,6 +7,7 @@ import numpy as np
 
 sys.path.append('..')
 from Controls import Controls
+from scipy.spatial.transform import Rotation
 from State import State
 from sys_id.test_dmd import perform_dmd
 
@@ -16,9 +17,9 @@ GLOBALS = {"np": np, "State": State, "Controls": Controls}
 PATTERN = re.compile(r"INFO - Frame: State=(?P<state>.*), Controls=(?P<controls>.*)")  # match non-startup lines
 
 
-def save_data(log_file_name: str):
 
-    log_file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs", log_file_name)
+def save_data(log_file_path):
+
     with open(log_file_path, "r") as f:
         replay_log = f.read()
 
@@ -32,8 +33,8 @@ def save_data(log_file_name: str):
     )
 
     def append_data(data, state, controls):
-        s = np.array([state.frame_number, *state.position, *state.velocity, *state.orientation.as_quat(), *state.angular_velocity])
-        a = np.array([controls.roll, controls.pitch, controls.yaw, controls.boost, controls.jump])
+        s = np.array([*state.position, *state.velocity, *state.orientation.as_euler('ZYX', degrees=True), *state.angular_velocity])
+        a = np.array([controls.roll, controls.pitch, controls.yaw, controls.boost])
         data['states'].append(s)
         data['actions'].append(a)
 
@@ -79,7 +80,7 @@ from sys_id.test_dmd import perform_dmd
 
 
 def main():
-    dataset = save_data("PIDStabilizationBot-2024-04-07 17-16-40.log")
+    dataset = save_data("../logs/PIDStabilizationBot-2024-04-07 17-16-40.log")
 
 
 if __name__ == '__main__':
