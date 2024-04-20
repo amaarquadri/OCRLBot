@@ -1,4 +1,6 @@
 import numpy as np
+from Ring import Ring
+
 
 def compute_forward_vector(roll, pitch, yaw):
     # Convert angles from degrees to radians
@@ -32,6 +34,7 @@ def compute_forward_vector(roll, pitch, yaw):
     forward = np.dot(R_z, np.dot(R_y, np.dot(R_x, forward)))
     return forward
 
+
 def get_ring_data():
     locations = [
         (49.999023, -2318.999756, 891.999939),
@@ -60,5 +63,13 @@ def get_ring_data():
     
     return rings_data
 
+
+def main():
+    rings = [Ring(position=pos, normal=norm) for pos, norm in get_ring_data()]
+    with open("../rings/leth_neon_heights_rings_level1.txt", "w") as f:
+        for ring in rings:
+            f.write(repr(ring) + "\n")
+
+
 if __name__ == "__main__":
-    print(get_ring_data())
+    main()
