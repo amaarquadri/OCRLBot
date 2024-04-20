@@ -1,6 +1,10 @@
 
 .idea/
 Experimental
+__pycache__
+sp.ipynb
+
+ocrl_env
 
 .DS_Store
 
