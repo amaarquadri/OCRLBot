@@ -6,3 +6,4 @@ import numpy as np
 class Ring:
     location: np.ndarray
     normal: np.ndarray  # points through the ring in the desired direction of motion
+    radius: float  # inner radius of the ring
