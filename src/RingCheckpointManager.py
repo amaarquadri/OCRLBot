@@ -7,7 +7,7 @@ from State import State
 class RingCheckpointManager:
     CHECKPOINT_REACHED_THRESHOLD = 100  # unreal units
 
-    def __init__(self, ring_checkpoints_file_name):
+    def __init__(self, ring_checkpoints_file_name: str):
         self.ring_checkpoints = RingCheckpointManager.load_ring_checkpoints(ring_checkpoints_file_name)
         self.current_ring_checkpoint_index = 0
 
