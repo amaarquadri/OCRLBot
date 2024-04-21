@@ -4,7 +4,7 @@
 3. Go to `C:\Program Files (x86)\Steam\steamapps\common\rocketleague\TAGame\CookedPCConsole`
 4. Rename `Labs_CirclePillars_P.upk` to `Labs_CirclePillars_P.upkbackup`
 6. Copy `C:\Program Files (x86)\Steam\steamapps\workshop\content\252950\2468375059\LethNeonHeightsRings.udk` to `C:\Program Files (x86)\Steam\steamapps\common\rocketleague\TAGame\CookedPCConsole\Labs_CirclePillars_P.upk` (note the change in the file extension)
-7. Launch RLBot, Click Add -> Load Folder, and select this repo
+7. Launch RLBot, Click Add -> Load Cfg File, and select `src/ConvexMPCBot.cfg`
 8. Set the map to Pillars, and add Unlimited Match Length and Unlimited Boost Amount to the Mutators.
 9. Launch
 
