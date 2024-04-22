@@ -2,6 +2,7 @@ import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.spatial.transform import Rotation as Rotation
 import matplotlib.pyplot as plt
+from matplotlib import use
 
 
 def S(vector: np.ndarray) -> np.ndarray:
@@ -73,4 +74,5 @@ def main():
 
 
 if __name__ == '__main__':
+    use("TkAgg")
     main()
