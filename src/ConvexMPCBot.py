@@ -8,24 +8,27 @@ from RingCheckpointManager import RingCheckpointManager
 
 
 class ConvexMPCBot(OCRLBot):
-    MPC_HORIZON = 240  # frames
+    MPC_HORIZON = 20  # frames
 
     def __init__(self, name, team, index):
         super().__init__(name, team, index)
         self.checkpoint_manager = RingCheckpointManager("rings/leth_neon_heights_rings_level1.txt")
 
         self.n, self.m = 12, 4
-        self.A = np.load("models/A.npy")
-        self.B = np.load("models/B.npy")
-        self.Q = np.eye(3)
-        self.Q_f = 2 * self.Q
+        self.A = np.load("sys_id/A.npy")
+        self.B = np.load("sys_id/B.npy")
+        self.Q = 1e-3*np.eye(3)
+        self.Q_f = 5 * self.Q
         self.R = np.eye(self.m)
 
 
     def update(self, state: State) -> Controls:
         ring = self.checkpoint_manager.get_current_ring_checkpoint(state)
+        eulers = state.orientation.as_euler("ZYX", degrees=True)
+        eulers[0] *= -1
+        eulers[1] *= -1
         x_0 = np.array([*state.position, *state.velocity,
-                        *state.orientation.as_euler("ZYX", degrees=True),
+                        *eulers,
                         *state.angular_velocity])
         x_g = ring.position
 
@@ -63,8 +66,13 @@ class ConvexMPCBot(OCRLBot):
 
         # Solve the problem
         start_time = perf_counter()
-        print(prob.solve())
+        max_iters = 1000
+        solver_options = {'abstol': 1e2, 'reltol': 1e2}
+
+        print(prob.solve(max_iters=max_iters, feastol = 1000, abstol=1, reltol=1, verbose = True))
         print(f"Optimization took {perf_counter() - start_time:.2f} seconds")
+
+        print(f"Output Controls are - {u.value}")
 
         controls = Controls()
         controls.roll, controls.pitch, controls.yaw, boost = u.value[:, 0]
