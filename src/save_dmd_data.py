@@ -141,7 +141,7 @@ if __name__ == '__main__':
 
 
     load_dir = '../dmd_data'
-    save_dir = '.'
+    save_dir = '../models'
 
     # Load data
     dataset = []
