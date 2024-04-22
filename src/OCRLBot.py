@@ -57,13 +57,13 @@ class OCRLBot(BaseAgent):
         )
 
     def get_car_state(self, packet: GameTickPacket, index: int) -> State:
-        car = packet.game_cars[index].physics
+        raw_state = OCRLBot.get_raw_car_state(packet, index)
         return State(
-            frame_number=packet.game_info.frame_num - self.start_frame,
-            position=np.array([car.location.x, car.location.y, car.location.z]),
-            velocity=np.array([car.velocity.x, car.velocity.y, car.velocity.z]),
-            orientation=Rotation.from_euler('ZYX', [car.rotation.yaw, car.rotation.pitch, car.rotation.roll]),
-            angular_velocity=np.array([car.angular_velocity.x, car.angular_velocity.y, car.angular_velocity.z])
+            frame_number=raw_state.frame_number - self.start_frame,
+            position=raw_state.position,
+            velocity=raw_state.velocity,
+            orientation=Rotation.from_euler('ZYX', raw_state.orientation[::-1]),
+            angular_velocity=raw_state.angular_velocity
         )
 
     def get_state(self, packet: GameTickPacket) -> State:
