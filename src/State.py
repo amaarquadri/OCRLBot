@@ -5,7 +5,7 @@ from scipy.spatial.transform import Rotation
 
 @dataclass
 class State:
-    frame_number: int
+    frame_number: int  # relative to when the round becomes active
     position: np.ndarray
     velocity: np.ndarray
     orientation: Rotation
