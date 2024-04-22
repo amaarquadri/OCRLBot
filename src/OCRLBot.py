@@ -1,3 +1,4 @@
+from typing import Optional
 import logging
 import os
 from datetime import datetime
@@ -5,6 +6,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 from rlbot.agents.base_agent import BaseAgent, GameTickPacket, SimpleControllerState
 from State import State
+from RawState import RawState
 from Controls import Controls
 
 
@@ -17,6 +19,8 @@ class OCRLBot(BaseAgent):
         self.logger = self.make_logger(enable_logging)
         self.start_frame = None
         self.perform_startup_sequence = perform_startup_sequence
+
+        self.raw_state: Optional[RawState] = None
 
     def make_logger(self, enable_logging) -> logging.Logger:
         logger = logging.getLogger("ocrl_logger")
@@ -41,6 +45,17 @@ class OCRLBot(BaseAgent):
             self.start_frame = packet.game_info.frame_num
         return True
 
+    @staticmethod
+    def get_raw_car_state(packet: GameTickPacket, index: int) -> RawState:
+        car = packet.game_cars[index].physics
+        return RawState(
+            frame_number=packet.game_info.frame_num,
+            position=np.array([car.location.x, car.location.y, car.location.z]),
+            velocity=np.array([car.velocity.x, car.velocity.y, car.velocity.z]),
+            orientation=np.array([car.rotation.roll, car.rotation.pitch, car.rotation.yaw]),
+            angular_velocity=np.array([car.angular_velocity.x, car.angular_velocity.y, car.angular_velocity.z])
+        )
+
     def get_car_state(self, packet: GameTickPacket, index: int) -> State:
         car = packet.game_cars[index].physics
         return State(
@@ -53,7 +68,7 @@ class OCRLBot(BaseAgent):
 
     def get_state(self, packet: GameTickPacket) -> State:
         """
-        Get the car's state as a State.
+        Get this car's state as a State.
 
         :param packet: The current GameTickPacket.
         :return: The car's state.
@@ -86,6 +101,7 @@ class OCRLBot(BaseAgent):
         if not self.has_started(packet):
             return SimpleControllerState()
 
+        self.raw_state = OCRLBot.get_raw_car_state(packet, self.index)
         state = self.get_state(packet)
         if self.perform_startup_sequence and state.frame_number / OCRLBot.FPS < 0.5:
             controls = Controls(pitch=1.0, jump=True, boost=True)  # Point the car upwards
