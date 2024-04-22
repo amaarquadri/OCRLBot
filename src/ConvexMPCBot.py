@@ -25,6 +25,7 @@ class ConvexMPCBot(OCRLBot):
     def update(self, state: State) -> Controls:
         ring = self.checkpoint_manager.get_current_ring_checkpoint(state)
         eulers = state.orientation.as_euler("ZYX", degrees=True)
+        # Assuming negative yaw and pitch 
         eulers[0] *= -1
         eulers[1] *= -1
         x_0 = np.array([*state.position, *state.velocity,
