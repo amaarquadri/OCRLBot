@@ -57,6 +57,17 @@ class PIDStabilizationBot(OCRLBot):
     def update(self, state: State) -> Controls:
         controls = Controls()
 
+        # uncomment to collect data for dynamic mode decomposition
+        if 2 < (state.frame_number / OCRLBot.FPS) < 2.5:
+            print("--------------------Random controls--------------------")
+            controls.roll, controls.pitch, controls.yaw = np.random.uniform(-1, 1, 3)
+            controls.boost = np.random.choice([True, False])
+            self.logger.info(f"Random Frame: RawState={repr(self.raw_state)}, "
+                             f"State={repr(state)}, Controls={repr(controls)}")
+            return controls
+        else:
+            print("Regular controls...")
+
         # Set the setpoint
         setpoint = Setpoint(position=np.array([0, 0, 1000]), yaw=0)
 

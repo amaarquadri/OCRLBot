@@ -29,7 +29,7 @@ class OCRLBot(BaseAgent):
         if enable_logging:
             timestamp = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
             log_file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                                         "logs", f"{self.__class__.__name__}-{timestamp}.log")
+                                         "dmd_data", f"{self.__class__.__name__}-{timestamp}.log")
             file_handler = logging.FileHandler(log_file_path)
             file_handler.setLevel(logging.DEBUG)
             file_handler.setFormatter(logging.Formatter('%(levelname)s - %(message)s'))
