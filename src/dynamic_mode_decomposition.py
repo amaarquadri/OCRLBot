@@ -43,6 +43,8 @@ def perform_dmd():
             last_raw_state = raw_state
             last_controls = controls
 
+    print(f"Found {len(x_kp1s)} data points for DMD")
+
     x_kp1_matrix = np.column_stack([raw_state.to_np() for raw_state in x_kp1s])
     x_k_matrix = np.column_stack([raw_state.to_np() for raw_state in x_ks])
     u_k_matrix = np.column_stack([controls.to_np() for controls in u_ks])
