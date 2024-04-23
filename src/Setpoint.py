@@ -5,4 +5,4 @@ import numpy as np
 @dataclass
 class Setpoint:
     position: np.ndarray
-    yaw: float
+    yaw: float  # radians
