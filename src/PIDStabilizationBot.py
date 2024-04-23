@@ -58,7 +58,7 @@ class PIDStabilizationBot(OCRLBot):
         controls = Controls()
 
         # Set the setpoint
-        setpoint = Setpoint(position=np.array([0, 2153, 1000]), yaw=0)
+        setpoint = Setpoint(position=np.array([0, 0, 1000]), yaw=0)
 
         # Calculate the controls
         desired_orientation = self.get_desired_orientation(state, setpoint)
