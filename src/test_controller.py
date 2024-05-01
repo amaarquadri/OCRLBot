@@ -44,10 +44,11 @@ def f(state: State, controls: Controls) -> State:
 
 def collect_synthetic_dmd_data(count=10_000):
     state = State(0,
-                  np.array([0, 0, 0]),
-                  np.array([0, 0, 0]),
-                  Rotation.from_euler("ZYX", [0, -90, 0], degrees=True),
-                  np.array([0, 0, 0]))
+                  np.array([0., 0., 0.]),
+                  np.array([0., 0., 0.]),
+                  Rotation.identity(),
+                  # Rotation.from_euler("ZYX", [0, -90, 0], degrees=True),
+                  np.array([0., 0., 0.]))
 
     x_kp1s = []
     x_ks = []
