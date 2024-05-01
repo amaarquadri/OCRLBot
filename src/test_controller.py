@@ -6,6 +6,7 @@ from State import State
 from Controls import Controls
 from OCRLBot import OCRLBot
 from PIDStabilizationBot import PIDStabilizationBot
+from dynamic_mode_decomposition import perform_dmd
 
 
 BOOST_ACCELERATION = 991.666  # uu/s^2
@@ -73,6 +74,11 @@ def simulate(bot_class: Type[OCRLBot]):
 
 
 def main():
+    # perform DMD
+    A, B = perform_dmd(*collect_synthetic_dmd_data())
+    np.save("models/A.npy", A)
+    np.save("models/B.npy", B)
+
     simulate(PIDStabilizationBot)
 
 
