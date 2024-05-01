@@ -8,7 +8,6 @@ from scipy.spatial.transform import Rotation
 from State import State
 from Controls import Controls
 from OCRLBot import OCRLBot
-from PIDStabilizationBot import PIDStabilizationBot
 from dynamic_mode_decomposition import perform_dmd
 
 
@@ -99,6 +98,7 @@ def main():
     np.save("models/B.npy", B)
 
     # simulate
+    from PIDStabilizationBot import PIDStabilizationBot
     history = simulate(PIDStabilizationBot)
     plot_results(history)
 
