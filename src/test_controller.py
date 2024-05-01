@@ -1,4 +1,5 @@
-from typing import Type
+from typing import Type, Tuple, List
+from copy import deepcopy
 import numpy as np
 import quaternion
 from scipy.spatial.transform import Rotation
@@ -58,7 +59,7 @@ def collect_synthetic_dmd_data(count=10_000):
     return x_kp1s, x_ks, u_ks
 
 
-def simulate(bot_class: Type[OCRLBot]):
+def simulate(bot_class: Type[OCRLBot], t_f=10) -> List[Tuple[float, State, Controls]]:
     bot = bot_class(bot_class.__name__, 0, 0, enable_logging=False)
 
     state = State(0,
@@ -67,10 +68,13 @@ def simulate(bot_class: Type[OCRLBot]):
                   Rotation.from_euler("ZYX", [0, -90, 0], degrees=True),
                   np.array([0, 0, 0]))
 
-    for i in range(100):
+    history = []
+    for t in np.arange(0, t_f, 1 / OCRLBot.FPS):
         controls = bot.update(state)
+        history.append((t, deepcopy(state), deepcopy(controls)))
         state = f(state, controls)
-        print(f"State={repr(state)}, Controls={repr(controls)}")
+
+    return history
 
 
 def main():
