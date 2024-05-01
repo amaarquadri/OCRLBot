@@ -48,15 +48,36 @@ class PIDStabilizationBot(OCRLBot):
 
     @staticmethod
     def should_boost(state: State, setpoint: Setpoint) -> bool:
-        v_z = state.velocity[2]
-        if v_z == 0:
-            # special case since the energy method breaks down when velocity is exactly zero
-            return state.position[2] < setpoint.position[2]
+        """
+        Implements a simple bang-bang controller using energy calculations.
+        """
+        v_z: float = state.velocity[2]
+        delta_z: float = state.position[2] - setpoint.position[2]
 
-        specific_energy = 0.5 * v_z ** 2 + (state.position[2] - setpoint.position[2]) * OCRLBot.GRAVITY  # relative to setpoint
-        # boosting adds energy when going up and subtracts energy when going down,
-        # so we boost if v_z and specific_energy have opposite signs
-        return specific_energy * v_z < 0
+        if delta_z == 0:
+            return v_z <= 0
+
+        if v_z == 0:
+            return delta_z < 0
+
+        if v_z > 0 and delta_z > 0:
+            return False  # we're already above the setpoint and moving up, so boosting is counterproductive
+        if v_z < 0 and delta_z < 0:
+            return True  # we're below the setpoint and moving down, so boosting is an obvious necessity
+
+        # at this point v_z and delta_z must have opposite signs
+        specific_kinetic_energy = 0.5 * v_z ** 2
+        if delta_z < 0:  # v_z > 0
+            specific_gravitational_energy = delta_z * OCRLBot.GRAVITY
+            # we're already going up towards the setpoint, so boost if we don't have enough energy to reach there
+            return specific_kinetic_energy + specific_gravitational_energy < 0
+
+        # at this point v_z < 0 and delta_z > 0
+        # assume that we are boosting (which effectively modifies gravity to be negative)
+        # and check to see if we should stop boosting
+        specific_gravitational_energy_when_boosting = delta_z * (OCRLBot.GRAVITY - OCRLBot.BOOST_ACCELERATION)
+        # stop boosting if we don't have enough energy to reach the setpoint
+        return not (specific_kinetic_energy + specific_gravitational_energy_when_boosting < 0)
 
     def update(self, state: State) -> Controls:
         controls = Controls()
