@@ -12,6 +12,7 @@ from Controls import Controls
 
 class OCRLBot(BaseAgent):
     GRAVITY = 650  # Unreal units per second squared
+    BOOST_ACCELERATION = 991.666  # Unreal units per second squared
     FPS = 120  # Frames per second
 
     def __init__(self, name, team, index, perform_startup_sequence=True, enable_logging=True):
