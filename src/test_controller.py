@@ -1,6 +1,8 @@
 from typing import Type, Tuple, List
 from copy import deepcopy
 import numpy as np
+from matplotlib import pyplot as plt
+from matplotlib import use
 import quaternion
 from scipy.spatial.transform import Rotation
 from State import State
@@ -77,14 +79,30 @@ def simulate(bot_class: Type[OCRLBot], t_f=10) -> List[Tuple[float, State, Contr
     return history
 
 
+def plot_results(history: List[Tuple[float, State, Controls]]) -> None:
+    t = [t for t, *_ in history]
+
+    plt.figure()
+    plt.plot(t, [state.position[0] for _, state, _ in history], label="x")
+    plt.plot(t, [state.position[1] for _, state, _ in history], label="y")
+    plt.plot(t, [state.position[2] for _, state, _ in history], label="z")
+    plt.legend()
+    plt.xlabel("Time (s)")
+    plt.ylabel("Position (m)")
+    plt.title("Position vs. Time")
+    plt.show()
+
+
 def main():
     # perform DMD
     A, B = perform_dmd(*collect_synthetic_dmd_data())
     np.save("models/A.npy", A)
     np.save("models/B.npy", B)
 
-    simulate(PIDStabilizationBot)
+    history = simulate(PIDStabilizationBot)
+    plot_results(history)
 
 
 if __name__ == '__main__':
+    use("TkAgg")
     main()
