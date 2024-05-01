@@ -12,3 +12,7 @@ class RawState:
     velocity: np.ndarray
     orientation: np.ndarray  # Euler angles in radians, roll, pitch, yaw
     angular_velocity: np.ndarray
+
+    def to_numpy(self) -> np.ndarray:
+        return np.concatenate([self.position, self.velocity,
+                               self.orientation, self.angular_velocity])

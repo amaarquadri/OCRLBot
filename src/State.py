@@ -17,6 +17,11 @@ class State:
         return State(frame_number, position, velocity,
                      Rotation.from_euler("ZYX", orientation, degrees=True), angular_velocity)
 
+    def to_numpy(self):
+        return np.concatenate([self.position, self.velocity,
+                               self.orientation.as_rotvec().flatten(),
+                               self.angular_velocity])
+
     def __repr__(self):
         return f"State(frame_number={self.frame_number}, " \
                f"position={repr(self.position)}, velocity={repr(self.velocity)}, " \
