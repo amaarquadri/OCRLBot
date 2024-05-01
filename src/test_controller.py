@@ -29,6 +29,7 @@ def f(state: State, controls: Controls) -> State:
     q = np.roll(q, 1)  # w, x, y, z
     q = np.quaternion(*q)
 
+    # https://gamedev.stackexchange.com/questions/108920/applying-angular-velocity-to-quaternion
     omega = np.quaternion(0, *state.angular_velocity)
     q += 0.5 * (1 / FPS) * omega * q
     q /= np.abs(q)
