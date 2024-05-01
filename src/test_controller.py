@@ -20,6 +20,8 @@ def f(state: State, controls: Controls) -> State:
     state.position += state.velocity / OCRLBot.FPS
     state.velocity += np.array([0, 0, -OCRLBot.GRAVITY]) / OCRLBot.FPS
     if controls.boost:
+        # TODO: once we get the simple case working,
+        #  change this to use x_dir since that is how the boost is applied
         z_dir = state.orientation.apply([0, 0, 1])
         state.velocity += z_dir * BOOST_ACCELERATION / OCRLBot.FPS
 
