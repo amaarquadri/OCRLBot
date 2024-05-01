@@ -12,7 +12,6 @@ from PIDStabilizationBot import PIDStabilizationBot
 from dynamic_mode_decomposition import perform_dmd
 
 
-BOOST_ACCELERATION = 991.666  # uu/s^2
 J = np.diag([1, 1, 1])  # kg m^2
 
 
@@ -23,7 +22,7 @@ def f(state: State, controls: Controls) -> State:
         # TODO: once we get the simple case working,
         #  change this to use x_dir since that is how the boost is applied
         z_dir = state.orientation.apply([0, 0, 1])
-        state.velocity += z_dir * BOOST_ACCELERATION / OCRLBot.FPS
+        state.velocity += z_dir * OCRLBot.BOOST_ACCELERATION / OCRLBot.FPS
 
     q = state.orientation.as_quat()  # x, y, z, w
     q = np.roll(q, 1)  # w, x, y, z
