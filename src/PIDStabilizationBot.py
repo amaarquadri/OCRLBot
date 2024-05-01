@@ -49,6 +49,10 @@ class PIDStabilizationBot(OCRLBot):
     @staticmethod
     def should_boost(state: State, setpoint: Setpoint) -> bool:
         v_z = state.velocity[2]
+        if v_z == 0:
+            # special case since the energy method breaks down when velocity is exactly zero
+            return state.position[2] < setpoint.position[2]
+
         specific_energy = 0.5 * v_z ** 2 + (state.position[2] - setpoint.position[2]) * OCRLBot.GRAVITY  # relative to setpoint
         # boosting adds energy when going up and subtracts energy when going down,
         # so we boost if v_z and specific_energy have opposite signs
