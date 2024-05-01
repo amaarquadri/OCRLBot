@@ -60,11 +60,11 @@ def collect_synthetic_dmd_data(count=10_000):
     return x_kp1s, x_ks, u_ks
 
 
-def simulate(bot_class: Type[OCRLBot], t_f=10) -> List[Tuple[float, State, Controls]]:
+def simulate(bot_class: Type[OCRLBot], t_f=4) -> List[Tuple[float, State, Controls]]:
     bot = bot_class(bot_class.__name__, 0, 0, enable_logging=False)
 
     state = State(0,
-                  np.array([0., 0., 0.]),
+                  np.array([0., -100., 1000.]),
                   np.array([0., 0., 0.]),
                   Rotation.from_euler("ZYX", [0, -90, 0], degrees=True) if BOOST_IN_X else Rotation.identity(),
                   np.array([0., 0., 0.]))
