@@ -7,7 +7,8 @@ from Controls import Controls
 from OCRLBot import OCRLBot
 from PIDStabilizationBot import PIDStabilizationBot
 
-BOOST_ACCELERATION = 1  # uu/s^2
+
+BOOST_ACCELERATION = 991.666  # uu/s^2
 J = np.diag([1, 1, 1])  # kg m^2
 GRAVITY = 9.81  # m/s^2
 FPS = 120
