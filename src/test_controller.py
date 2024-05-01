@@ -14,16 +14,14 @@ from dynamic_mode_decomposition import perform_dmd
 
 BOOST_ACCELERATION = 991.666  # uu/s^2
 J = np.diag([1, 1, 1])  # kg m^2
-GRAVITY = 9.81  # m/s^2
-FPS = 120
 
 
 def f(state: State, controls: Controls) -> State:
-    state.position += state.velocity / FPS
-    state.velocity += np.array([0, 0, -GRAVITY]) / FPS
+    state.position += state.velocity / OCRLBot.FPS
+    state.velocity += np.array([0, 0, -OCRLBot.GRAVITY]) / OCRLBot.FPS
     if controls.boost:
         z_dir = state.orientation.apply([0, 0, 1])
-        state.velocity += z_dir * BOOST_ACCELERATION / FPS
+        state.velocity += z_dir * BOOST_ACCELERATION / OCRLBot.FPS
 
     q = state.orientation.as_quat()  # x, y, z, w
     q = np.roll(q, 1)  # w, x, y, z
@@ -31,14 +29,14 @@ def f(state: State, controls: Controls) -> State:
 
     # https://gamedev.stackexchange.com/questions/108920/applying-angular-velocity-to-quaternion
     omega = np.quaternion(0, *state.angular_velocity)
-    q += 0.5 * (1 / FPS) * omega * q
+    q += 0.5 * (1 / OCRLBot.FPS) * omega * q
     q /= np.abs(q)
     q = quaternion.as_float_array(q)
     q = np.roll(q, -1)  # x, y, z, w
     state.orientation = Rotation.from_quat(q)
 
     torque = np.array([controls.roll, controls.pitch, controls.yaw])
-    state.angular_velocity += np.linalg.inv(J) @ torque / FPS
+    state.angular_velocity += np.linalg.inv(J) @ torque / OCRLBot.FPS
     return state
 
 
