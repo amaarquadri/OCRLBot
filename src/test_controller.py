@@ -66,10 +66,11 @@ def simulate(bot_class: Type[OCRLBot], t_f=10) -> List[Tuple[float, State, Contr
     bot = bot_class(bot_class.__name__, 0, 0, enable_logging=False)
 
     state = State(0,
-                  np.array([0, 0, 0]),
-                  np.array([0, 0, 0]),
-                  Rotation.from_euler("ZYX", [0, -90, 0], degrees=True),
-                  np.array([0, 0, 0]))
+                  np.array([0., 0., 0.]),
+                  np.array([0., 0., 0.]),
+                  Rotation.identity(),
+                  # Rotation.from_euler("ZYX", [0, -90, 0], degrees=True),
+                  np.array([0., 0., 0.]))
 
     history = []
     for t in np.arange(0, t_f, 1 / OCRLBot.FPS):
