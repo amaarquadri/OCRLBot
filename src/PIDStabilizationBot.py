@@ -10,9 +10,9 @@ class PIDStabilizationBot(OCRLBot):
     def __init__(self, name, team, index, enable_logging=True):
         super().__init__(name, team, index, enable_logging=enable_logging)
         self.kp_position = 1 * np.identity(3)
-        self.kd_position = 0 * np.identity(3)
-        self.kp_orientation = 1 * np.identity(3)
-        self.kd_orientation = 0 * np.identity(3)
+        self.kd_position = 1 * np.identity(3)
+        self.kp_orientation = 100 * np.identity(3)
+        self.kd_orientation = 50 * np.identity(3)
 
     def get_desired_orientation(self, state: State, setpoint: Setpoint) -> Rotation:
         """
