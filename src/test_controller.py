@@ -13,16 +13,15 @@ from dynamic_mode_decomposition import perform_dmd
 
 
 J = np.diag([1, 1, 1])  # kg m^2
+BOOST_IN_X = True
 
 
 def f(state: State, controls: Controls) -> State:
     state.position += state.velocity / OCRLBot.FPS
     state.velocity += np.array([0, 0, -OCRLBot.GRAVITY]) / OCRLBot.FPS
     if controls.boost:
-        # TODO: once we get the simple case working,
-        #  change this to use x_dir since that is how the boost is applied
-        z_dir = state.orientation.apply([0, 0, 1])
-        state.velocity += z_dir * OCRLBot.BOOST_ACCELERATION / OCRLBot.FPS
+        dir = state.orientation.apply([1, 0, 0] if BOOST_IN_X else [0, 0, 1])
+        state.velocity += dir * OCRLBot.BOOST_ACCELERATION / OCRLBot.FPS
 
     q = state.orientation.as_quat()  # x, y, z, w
     q = np.roll(q, 1)  # w, x, y, z
@@ -45,8 +44,7 @@ def collect_synthetic_dmd_data(count=10_000):
     state = State(0,
                   np.array([0., 0., 0.]),
                   np.array([0., 0., 0.]),
-                  Rotation.identity(),
-                  # Rotation.from_euler("ZYX", [0, -90, 0], degrees=True),
+                  Rotation.from_euler("ZYX", [0, -90, 0], degrees=True) if BOOST_IN_X else Rotation.identity(),
                   np.array([0., 0., 0.]))
 
     x_kp1s = []
@@ -68,8 +66,7 @@ def simulate(bot_class: Type[OCRLBot], t_f=10) -> List[Tuple[float, State, Contr
     state = State(0,
                   np.array([0., 0., 0.]),
                   np.array([0., 0., 0.]),
-                  Rotation.identity(),
-                  # Rotation.from_euler("ZYX", [0, -90, 0], degrees=True),
+                  Rotation.from_euler("ZYX", [0, -90, 0], degrees=True) if BOOST_IN_X else Rotation.identity(),
                   np.array([0., 0., 0.]))
 
     history = []

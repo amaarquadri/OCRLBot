@@ -4,6 +4,7 @@ from OCRLBot import OCRLBot
 from State import State
 from Controls import Controls
 from Setpoint import Setpoint
+from test_controller import BOOST_IN_X
 
 
 class PIDStabilizationBot(OCRLBot):
@@ -33,8 +34,7 @@ class PIDStabilizationBot(OCRLBot):
             # self.logger.debug(f"n={n}, n_magnitude={n_magnitude}, rho={np.rad2deg(rho)}, z_d={z_d}")
             R_EB = Rotation.from_rotvec(rho * n / n_magnitude)
         R_AE = Rotation.from_euler("ZYX", [setpoint.yaw, 0, 0])
-        # TODO: add the 90deg rotation back in once we get it working without it first
-        return R_AE * R_EB  # * Rotation.from_euler("ZYX", [0, np.pi / 2, 0])  # pitch up 90 degrees first
+        return R_AE * R_EB
 
     def calc_torque(self, state: State, desired_orientation: Rotation) -> np.ndarray:
         # From Robot Mobility slides, but assuming J = 1
@@ -88,6 +88,8 @@ class PIDStabilizationBot(OCRLBot):
 
         # Calculate the controls
         desired_orientation = self.get_desired_orientation(state, setpoint)
+        if BOOST_IN_X:
+            desired_orientation = Rotation.from_euler("ZYX", [0, -90, 0], degrees=True) * desired_orientation  # pitch up 90 degrees afterwards
         # desired_orientation = Rotation.from_euler("ZYX", [90, 80, 0], degrees=True)
         self.logger.debug(f"Desired orientation={desired_orientation.as_euler('ZYX', degrees=True)}")
         torques = self.calc_torque(state, desired_orientation)
