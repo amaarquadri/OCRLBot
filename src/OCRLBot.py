@@ -57,14 +57,7 @@ class OCRLBot(BaseAgent):
         )
 
     def get_car_state(self, packet: GameTickPacket, index: int) -> State:
-        raw_state = OCRLBot.get_raw_car_state(packet, index)
-        return State(
-            frame_number=raw_state.frame_number - self.start_frame,
-            position=raw_state.position,
-            velocity=raw_state.velocity,
-            orientation=Rotation.from_euler('ZYX', raw_state.orientation[::-1]),
-            angular_velocity=raw_state.angular_velocity
-        )
+        return State.from_raw_state(self.get_raw_car_state(packet, index), self.start_frame)
 
     def get_state(self, packet: GameTickPacket) -> State:
         """

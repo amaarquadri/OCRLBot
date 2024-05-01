@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import numpy as np
 from scipy.spatial.transform import Rotation
+from RawState import RawState
 
 
 @dataclass
@@ -10,6 +11,15 @@ class State:
     velocity: np.ndarray
     orientation: Rotation
     angular_velocity: np.ndarray
+
+    @staticmethod
+    def from_raw_state(raw_state: RawState, start_frame: int):
+        orientation = Rotation.from_euler("ZYX", raw_state.orientation[::-1])
+        return State(raw_state.frame_number - start_frame,
+                     raw_state.position,
+                     raw_state.velocity,
+                     orientation,
+                     raw_state.angular_velocity)
 
     @staticmethod
     def from_euler(frame_number: int, position: np.ndarray, velocity: np.ndarray,
