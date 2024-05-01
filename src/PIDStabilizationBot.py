@@ -33,7 +33,8 @@ class PIDStabilizationBot(OCRLBot):
             # self.logger.debug(f"n={n}, n_magnitude={n_magnitude}, rho={np.rad2deg(rho)}, z_d={z_d}")
             R_EB = Rotation.from_rotvec(rho * n / n_magnitude)
         R_AE = Rotation.from_euler("ZYX", [setpoint.yaw, 0, 0])
-        return R_AE * R_EB * Rotation.from_euler("ZYX", [0, np.pi / 2, 0])  # pitch up 90 degrees first
+        # TODO: add the 90deg rotation back in once we get it working without it first
+        return R_AE * R_EB  # * Rotation.from_euler("ZYX", [0, np.pi / 2, 0])  # pitch up 90 degrees first
 
     def calc_torque(self, state: State, desired_orientation: Rotation) -> np.ndarray:
         # From Robot Mobility slides, but assuming J = 1
