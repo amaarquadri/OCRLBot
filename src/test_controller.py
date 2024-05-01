@@ -100,6 +100,7 @@ def main():
     np.save("models/A.npy", A)
     np.save("models/B.npy", B)
 
+    # simulate
     history = simulate(PIDStabilizationBot)
     plot_results(history)
 
