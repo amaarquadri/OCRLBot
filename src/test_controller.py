@@ -37,6 +37,26 @@ def f(state: State, controls: Controls) -> State:
     return state
 
 
+def collect_synthetic_dmd_data(count=10_000):
+    state = State(0,
+                  np.array([0, 0, 0]),
+                  np.array([0, 0, 0]),
+                  Rotation.from_euler("ZYX", [0, -90, 0], degrees=True),
+                  np.array([0, 0, 0]))
+
+    x_kp1s = []
+    x_ks = []
+    u_ks = []
+    for i in range(count):
+        controls = Controls.random()
+        new_state = f(state, controls)
+        x_kp1s.append(deepcopy(new_state))
+        x_ks.append(state)
+        u_ks.append(controls)
+
+    return x_kp1s, x_ks, u_ks
+
+
 def simulate(bot_class: Type[OCRLBot]):
     bot = bot_class(bot_class.__name__, 0, 0, enable_logging=False)
 
