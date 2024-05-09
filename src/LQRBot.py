@@ -1,6 +1,6 @@
 from time import perf_counter
 import numpy as np
-from control import lqr
+from control import dlqr
 from OCRLBot import OCRLBot
 from State import State
 from Controls import Controls
@@ -17,7 +17,7 @@ class LQRBot(OCRLBot):
         self.B = np.load("models/B.npy")
         self.Q = np.eye(self.n)
         self.R = 1e6 * np.eye(self.m)
-        self.K, *_ = lqr(self.A, self.B, self.Q, self.R)
+        self.K, *_ = dlqr(self.A, self.B, self.Q, self.R)
 
     def update(self, state: State) -> Controls:
         ring = self.checkpoint_manager.get_current_ring_checkpoint(state)
