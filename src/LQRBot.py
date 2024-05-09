@@ -15,6 +15,8 @@ class LQRBot(OCRLBot):
         self.n, self.m = 12, 4
         self.A = np.load("models/A.npy")
         self.B = np.load("models/B.npy")
+        assert self.A.shape == (self.n, self.n), "Shape of A is incorrect"
+        assert self.B.shape == (self.n, self.m), "Shape of B is incorrect"
         self.Q = np.eye(self.n)
         self.R = 1e6 * np.eye(self.m)
         self.K, *_ = dlqr(self.A, self.B, self.Q, self.R)
