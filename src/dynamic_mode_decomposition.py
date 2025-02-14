@@ -45,7 +45,11 @@ def parse_dmd_data(data_dir: str):
     return x_kp1s, x_ks, u_ks
 
 
-def perform_dmd(x_kp1s: List[State], x_ks: List[State], u_ks: List[Controls]):
+def perform_dmd(x_kp1s: List[State], x_ks: List[State], u_ks: List[Controls], body_velocities=False):
+    if body_velocities:
+        x_kp1s = [state.with_body_velocity() for state in x_kp1s]
+        x_ks = [state.with_body_velocity() for state in x_ks]
+
     x_kp1_matrix = np.column_stack([state.to_numpy() for state in x_kp1s])
     x_k_matrix = np.column_stack([state.to_numpy() for state in x_ks])
     u_k_matrix = np.column_stack([controls.to_numpy() for controls in u_ks])

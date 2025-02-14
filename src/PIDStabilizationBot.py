@@ -5,6 +5,7 @@ from State import State
 from Controls import Controls
 from Setpoint import Setpoint
 from test_controller import BOOST_IN_X
+from copy import deepcopy
 
 
 class PIDStabilizationBot(OCRLBot):
@@ -83,17 +84,35 @@ class PIDStabilizationBot(OCRLBot):
     def update(self, state: State) -> Controls:
         controls = Controls()
 
+        # uncomment to collect data for dynamic mode decomposition
+        # if 2 < (state.frame_number / OCRLBot.FPS) < 2.5:
+        #     print("--------------------Random controls--------------------")
+        #     controls.roll, controls.pitch, controls.yaw = np.random.uniform(-1, 1, 3)
+        #     controls.boost = np.random.choice([True, False])
+        #     self.logger.info(f"Random Frame: RawState={repr(self.raw_state)}, "
+        #                      f"State={repr(state)}, Controls={repr(controls)}")
+        #     return controls
+        # else:
+        #     print("Regular controls...")
+
         # Set the setpoint
-        setpoint = Setpoint(position=np.array([0, 0, 1000]), yaw=0)
+        setpoint = Setpoint(position=np.array([0, 0, 0]), yaw=0)
 
         # Calculate the controls
         desired_orientation = self.get_desired_orientation(state, setpoint)
-        if BOOST_IN_X:
-            desired_orientation = Rotation.from_euler("ZYX", [0, -90, 0], degrees=True) * desired_orientation  # pitch up 90 degrees afterwards
-        # desired_orientation = Rotation.from_euler("ZYX", [90, 80, 0], degrees=True)
+        # desired_orientation = Rotation.from_euler("ZYX", [0, 0, 5], degrees=True)
+
+        # retval = deepcopy(desired_orientation)
+        # if BOOST_IN_X:
+        #     # mat = desired_orientation.as_matrix()
+        #     # desired_orientation = Rotation.from_matrix(np.column_stack((mat[:, 2], mat[:, 1], -mat[:, 0])))
+        #     desired_orientation = Rotation.from_rotvec([0, -90, 0], degrees=True) * desired_orientation  # pitch up 90 degrees afterwards
+
+        # desired_orientation = Rotation.from_euler("YZX", [40, -5, 0], degrees=True)
         self.logger.debug(f"Desired orientation={desired_orientation.as_euler('ZYX', degrees=True)}")
         torques = self.calc_torque(state, desired_orientation)
         controls.roll, controls.pitch, controls.yaw = torques
         controls.boost = PIDStabilizationBot.should_boost(state, setpoint)
         self.logger.info(f"Frame: State={repr(state)}, Controls={repr(controls)}")
-        return controls
+        # controls.roll = controls.pitch = 0
+        return controls, desired_orientation
